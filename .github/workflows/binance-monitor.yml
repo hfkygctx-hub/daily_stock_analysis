@@ -32,6 +32,13 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v5
 
+      - name: 网络诊断 (测试币安域名可达性)
+        run: |
+          for host in api.binance.com data-api.binance.vision fapi.binance.com api.telegram.org; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://$host/api/v3/ping" 2>/dev/null || echo "FAIL")
+            echo "$host -> $code"
+          done
+
       - name: 恢复上次状态 (cache)
         uses: actions/cache/restore@v4
         with:
