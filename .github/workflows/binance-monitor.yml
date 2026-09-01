@@ -5,6 +5,12 @@ on:
     # 每 10 分钟一次（公开仓库 Actions 无限额度）
     - cron: '*/10 * * * *'
   workflow_dispatch:          # 支持手动触发
+    inputs:
+      test_notify:
+        description: '发送测试消息验证 Telegram 推送'
+        required: false
+        default: false
+        type: boolean
   push:
     paths:
       - 'binance/**'
@@ -32,13 +38,6 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v5
 
-      - name: 网络诊断 (测试币安域名可达性)
-        run: |
-          for host in api.binance.com data-api.binance.vision fapi.binance.com api.telegram.org; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://$host/api/v3/ping" 2>/dev/null || echo "FAIL")
-            echo "$host -> $code"
-          done
-
       - name: 恢复上次状态 (cache)
         uses: actions/cache/restore@v4
         with:
@@ -48,7 +47,12 @@ jobs:
 
       - name: 运行币安监控
         working-directory: binance
-        run: python binance_monitor.py
+        run: |
+          if [ "${{ github.event_name == 'workflow_dispatch' && inputs.test_notify == 'true' }}" == "true" ]; then
+            python binance_monitor.py --test-notify
+          else
+            python binance_monitor.py
+          fi
 
       - name: 保存本次状态 (cache)
         uses: actions/cache/save@v4

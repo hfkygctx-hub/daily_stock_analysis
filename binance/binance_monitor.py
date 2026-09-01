@@ -98,6 +98,18 @@ def send_telegram(text):
         return result.get("ok", False)
 
 
+def send_test_message():
+    """发送测试消息（workflow 手动触发时验证推送链路）。"""
+    msg = (
+        "✅ <b>币安异动监控已就绪</b>\n"
+        "这是一条测试消息，说明 Telegram 推送链路正常。\n"
+        f"时间: {now_str()} (UTC+8)"
+    )
+    ok = send_telegram(msg)
+    print(f"测试消息推送: {'成功' if ok else '失败'}")
+    return 0 if ok else 1
+
+
 # ---------------- 主逻辑 ----------------
 def main():
     symbols = [s.strip().upper() for s in
@@ -199,6 +211,8 @@ def main():
 
 if __name__ == "__main__":
     try:
+        if "--test-notify" in sys.argv:
+            sys.exit(send_test_message())
         main()
     except Exception as e:
         print(f"!! 运行异常: {e}")
