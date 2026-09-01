@@ -1,0 +1,50 @@
+name: Binance 异动监控
+
+on:
+  schedule:
+    # 每 10 分钟一次（公开仓库 Actions 无限额度）
+    - cron: '*/10 * * * *'
+  workflow_dispatch:          # 支持手动触发
+  push:
+    paths:
+      - 'binance/**'
+      - '.github/workflows/binance-monitor.yml'
+
+concurrency:
+  group: binance-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
+      BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      # ---- 可调参数（改这里即可，不用动脚本）----
+      MONITOR_SYMBOLS: ${{ vars.MONITOR_SYMBOLS || 'BTCUSDT,ETHUSDT' }}
+      PRICE_ALERT_PCT: ${{ vars.PRICE_ALERT_PCT || '2.0' }}      # 相对上次检查的价格波动阈值 %
+      DAY_ALERT_PCT: ${{ vars.DAY_ALERT_PCT || '5.0' }}          # 24h 涨跌幅阈值 %
+      FUNDING_ALERT_PCT: ${{ vars.FUNDING_ALERT_PCT || '0.05' }} # 资金费率绝对值阈值 %
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v5
+
+      - name: 恢复上次状态 (cache)
+        uses: actions/cache/restore@v4
+        with:
+          path: binance/state.json
+          key: binance-monitor-state
+          fail-on-cache-miss: false
+
+      - name: 运行币安监控
+        working-directory: binance
+        run: python binance_monitor.py
+
+      - name: 保存本次状态 (cache)
+        uses: actions/cache/save@v4
+        with:
+          path: binance/state.json
+          key: binance-monitor-state
