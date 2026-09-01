@@ -47,8 +47,11 @@ jobs:
 
       - name: 运行币安监控
         working-directory: binance
+        env:
+          TEST_NOTIFY: ${{ inputs.test_notify }}
         run: |
-          if [ "${{ github.event_name == 'workflow_dispatch' && inputs.test_notify == 'true' }}" == "true" ]; then
+          echo "TEST_NOTIFY raw=[$TEST_NOTIFY] event=${{ github.event_name }}"
+          if [ "$TEST_NOTIFY" == "true" ]; then
             python binance_monitor.py --test-notify
           else
             python binance_monitor.py
