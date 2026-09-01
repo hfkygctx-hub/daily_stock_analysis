@@ -50,7 +50,6 @@ jobs:
         env:
           TEST_NOTIFY: ${{ inputs.test_notify }}
         run: |
-          echo "TEST_NOTIFY raw=[$TEST_NOTIFY] event=${{ github.event_name }}"
           if [ "$TEST_NOTIFY" == "true" ]; then
             python binance_monitor.py --test-notify
           else
