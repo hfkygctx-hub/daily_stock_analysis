@@ -12,6 +12,10 @@
 
 运行环境: GitHub Actions (海外 runner, 直连币安/Telegram, 无需代理)
 仅用 Python 标准库, 零第三方依赖。
+
+注意: GitHub 托管 runner 位于美国, api.binance.com 返回 HTTP 451 (地区限制),
+因此现货行情改用币安官方公开数据镜像 data-api.binance.vision (无地区限制)。
+合约资金费率接口 (fapi.binance.com) 同样被限, 脚本自动跳过该检测项。
 """
 
 import hashlib
@@ -25,7 +29,7 @@ import urllib.request
 from datetime import datetime, timezone, timedelta
 
 CN_TZ = timezone(timedelta(hours=8))
-SPOT_BASE = "https://api.binance.com"
+SPOT_BASE = "https://data-api.binance.vision"  # 币安官方公开数据镜像（规避地区限制）
 FUTURES_BASE = "https://fapi.binance.com"
 
 STATE_FILE = os.environ.get("STATE_FILE", "state.json")
